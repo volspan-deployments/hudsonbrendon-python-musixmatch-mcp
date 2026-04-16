@@ -15,7 +15,7 @@ API_KEY = os.environ.get("MUSIXMATCH_API_KEY", "")
 
 
 def build_params(extra: dict) -> dict:
-    """Build query params with API key, filtering out None values."""
+    """Build query params with api key, filtering out None values."""
     params = {"apikey": API_KEY, "format": "json"}
     for k, v in extra.items():
         if v is not None:
@@ -30,7 +30,7 @@ async def get_chart_artists(
     country: Optional[str] = "US",
     format: Optional[str] = "json",
 ) -> dict:
-    """Retrieve the top artists chart for a given country from Musixmatch.
+    """Retrieve the list of top artists for a given country from Musixmatch.
     Use this when the user wants to discover popular or trending artists in a specific country."""
     params = build_params({
         "page": page,
@@ -41,8 +41,6 @@ async def get_chart_artists(
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{BASE_URL}/chart.artists.get", params=params)
         response.raise_for_status()
-        if format == "xml":
-            return {"xml": response.text}
         return response.json()
 
 
@@ -54,9 +52,8 @@ async def get_chart_tracks(
     country: Optional[str] = "US",
     format: Optional[str] = "json",
 ) -> dict:
-    """Retrieve the top tracks chart for a given country from Musixmatch.
-    Use this when the user wants to discover trending or popular songs in a specific country,
-    optionally filtered to only tracks that have lyrics."""
+    """Retrieve the list of top tracks/songs for a given country from Musixmatch.
+    Use this when the user wants to discover trending or popular songs in a specific region."""
     params = build_params({
         "page": page,
         "page_size": max(1, min(100, page_size)),
@@ -67,8 +64,6 @@ async def get_chart_tracks(
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{BASE_URL}/chart.tracks.get", params=params)
         response.raise_for_status()
-        if format == "xml":
-            return {"xml": response.text}
         return response.json()
 
 
@@ -77,18 +72,18 @@ async def search_tracks(
     q_track: Optional[str] = None,
     q_artist: Optional[str] = None,
     q_lyrics: Optional[str] = None,
-    page: int = 1,
-    page_size: int = 10,
+    page: Optional[int] = 1,
+    page_size: Optional[int] = 10,
     f_has_lyrics: Optional[bool] = False,
 ) -> dict:
     """Search for tracks on Musixmatch by track title, artist name, or lyrics snippet.
-    Use this when the user wants to find a specific song or look up tracks matching a query."""
+    Use this when the user wants to find a specific song or explore songs matching certain criteria."""
     params = build_params({
         "q_track": q_track,
         "q_artist": q_artist,
         "q_lyrics": q_lyrics,
-        "page": page,
-        "page_size": max(1, min(100, page_size)),
+        "page": page or 1,
+        "page_size": max(1, min(100, page_size or 10)),
         "f_has_lyrics": 1 if f_has_lyrics else 0,
     })
     async with httpx.AsyncClient() as client:
@@ -102,8 +97,8 @@ async def get_track_lyrics(
     track_id: int,
     format: Optional[str] = "json",
 ) -> dict:
-    """Retrieve the full lyrics for a specific track by its Musixmatch track ID.
-    Use this when the user wants to read or display the lyrics of a known track."""
+    """Retrieve the lyrics for a specific track by its Musixmatch track ID.
+    Use this when the user wants to read the full lyrics of a known song."""
     params = build_params({
         "track_id": track_id,
         "format": format or "json",
@@ -111,8 +106,6 @@ async def get_track_lyrics(
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{BASE_URL}/track.lyrics.get", params=params)
         response.raise_for_status()
-        if format == "xml":
-            return {"xml": response.text}
         return response.json()
 
 
@@ -121,8 +114,8 @@ async def get_track(
     track_id: int,
     format: Optional[str] = "json",
 ) -> dict:
-    """Retrieve detailed metadata for a specific track by its Musixmatch track ID.
-    Use this when the user wants information about a track such as title, artist, album, rating, or other attributes."""
+    """Retrieve metadata and details about a specific track by its Musixmatch track ID.
+    Use this when the user needs information such as album, artist, duration, or explicit flag for a known track."""
     params = build_params({
         "track_id": track_id,
         "format": format or "json",
@@ -130,83 +123,67 @@ async def get_track(
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{BASE_URL}/track.get", params=params)
         response.raise_for_status()
-        if format == "xml":
-            return {"xml": response.text}
         return response.json()
 
 
 @mcp.tool()
 async def search_artists(
     q_artist: str,
-    page: int = 1,
-    page_size: int = 10,
+    page: Optional[int] = 1,
+    page_size: Optional[int] = 10,
     format: Optional[str] = "json",
 ) -> dict:
     """Search for artists on Musixmatch by name.
-    Use this when the user wants to find an artist's Musixmatch profile, ID, or general information about them."""
+    Use this when the user wants to find an artist's Musixmatch ID or general artist information before drilling deeper."""
     params = build_params({
         "q_artist": q_artist,
-        "page": page,
-        "page_size": max(1, min(100, page_size)),
+        "page": page or 1,
+        "page_size": max(1, min(100, page_size or 10)),
         "format": format or "json",
     })
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{BASE_URL}/artist.search", params=params)
         response.raise_for_status()
-        if format == "xml":
-            return {"xml": response.text}
         return response.json()
 
 
 @mcp.tool()
 async def get_artist_albums(
     artist_id: int,
-    page: int = 1,
-    page_size: int = 10,
-    g_album_name: int = 1,
+    page: Optional[int] = 1,
+    page_size: Optional[int] = 10,
     s_release_date: Optional[str] = "desc",
     format: Optional[str] = "json",
 ) -> dict:
-    """Retrieve the discography (list of albums) for a specific artist by their Musixmatch artist ID.
-    Use this when the user wants to explore an artist's albums or find a particular album."""
+    """Retrieve the list of albums for a specific artist by their Musixmatch artist ID.
+    Use this when the user wants to explore an artist's discography."""
     params = build_params({
         "artist_id": artist_id,
-        "page": page,
-        "page_size": max(1, min(100, page_size)),
-        "g_album_name": g_album_name,
+        "page": page or 1,
+        "page_size": max(1, min(100, page_size or 10)),
         "s_release_date": s_release_date or "desc",
         "format": format or "json",
     })
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{BASE_URL}/artist.albums.get", params=params)
         response.raise_for_status()
-        if format == "xml":
-            return {"xml": response.text}
         return response.json()
 
 
 @mcp.tool()
-async def get_album_tracks(
-    album_id: int,
-    page: int = 1,
-    page_size: int = 10,
-    f_has_lyrics: Optional[bool] = False,
+async def get_track_snippet(
+    track_id: int,
     format: Optional[str] = "json",
 ) -> dict:
-    """Retrieve the list of tracks for a specific album by its Musixmatch album ID.
-    Use this when the user wants to see the track listing of an album or find a specific song within it."""
+    """Retrieve a short lyrics snippet (excerpt) for a specific track by its Musixmatch track ID.
+    Use this when the user wants a quick preview of lyrics without fetching the full text."""
     params = build_params({
-        "album_id": album_id,
-        "page": page,
-        "page_size": max(1, min(100, page_size)),
-        "f_has_lyrics": 1 if f_has_lyrics else 0,
+        "track_id": track_id,
         "format": format or "json",
     })
     async with httpx.AsyncClient() as client:
-        response = await client.get(f"{BASE_URL}/album.tracks.get", params=params)
+        response = await client.get(f"{BASE_URL}/track.snippet.get", params=params)
         response.raise_for_status()
-        if format == "xml":
-            return {"xml": response.text}
         return response.json()
 
 
@@ -241,5 +218,6 @@ app = Starlette(
     ],
     lifespan=sse_app.lifespan,
 )
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
