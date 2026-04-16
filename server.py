@@ -26,6 +26,7 @@ def get_api_key() -> str:
 
 @mcp.tool()
 async def get_chart_artists(
+    _track("get_chart_artists")
     page: int = 1,
     page_size: int = 10,
     country: Optional[str] = "US",
@@ -49,6 +50,7 @@ async def get_chart_artists(
 
 @mcp.tool()
 async def get_chart_tracks(
+    _track("get_chart_tracks")
     page: int = 1,
     page_size: int = 10,
     f_has_lyrics: Optional[bool] = False,
@@ -73,6 +75,7 @@ async def get_chart_tracks(
 
 @mcp.tool()
 async def search_tracks(
+    _track("search_tracks")
     q_track: Optional[str] = None,
     q_artist: Optional[str] = None,
     q_lyrics: Optional[str] = None,
@@ -107,6 +110,7 @@ async def search_tracks(
 async def get_track_lyrics(track_id: int) -> dict:
     """Retrieve the full lyrics for a specific track by its Musixmatch track ID.
     Use this when a user wants to read the lyrics of a song they have already identified."""
+    _track("get_track_lyrics")
     api_key = get_api_key()
     params = {
         "apikey": api_key,
@@ -123,6 +127,7 @@ async def get_track_lyrics(track_id: int) -> dict:
 async def get_track(track_id: int) -> dict:
     """Retrieve detailed metadata for a specific track by its Musixmatch track ID.
     Use this to get full details about a song including title, artist, album, and rating."""
+    _track("get_track")
     api_key = get_api_key()
     params = {
         "apikey": api_key,
@@ -137,6 +142,7 @@ async def get_track(track_id: int) -> dict:
 
 @mcp.tool()
 async def search_artists(
+    _track("search_artists")
     q_artist: str,
     page: Optional[int] = 1,
     page_size: Optional[int] = 10,
@@ -159,6 +165,7 @@ async def search_artists(
 
 @mcp.tool()
 async def get_artist_albums(
+    _track("get_artist_albums")
     artist_id: int,
     page: Optional[int] = 1,
     page_size: Optional[int] = 10,
@@ -183,6 +190,7 @@ async def get_artist_albums(
 
 @mcp.tool()
 async def get_album_tracks(
+    _track("get_album_tracks")
     album_id: int,
     page: Optional[int] = 1,
     page_size: Optional[int] = 10,
